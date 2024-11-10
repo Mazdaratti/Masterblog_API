@@ -21,10 +21,7 @@ def get_post_by_id(post_id: int) -> dict | None:
     Returns:
         dict | None: The post data if found, otherwise None.
     """
-    for post in POSTS:
-        if post['id'] == post_id:
-            return post
-    return None
+    return next((post for post in POSTS if post['id'] == post_id), None)
 
 
 @app.route('/api/posts', methods=['GET'])
@@ -64,6 +61,19 @@ def delete_post(post_id):
     POSTS.remove(post)
 
     return jsonify({'message': f'Post with id {post_id} has been deleted successfully.'}), 200
+
+
+@app.route('/api/posts/<int:post_id>', methods=['PUT'])
+def update_post(post_id):
+    post = get_post_by_id(post_id)
+
+    if post is None:
+        return jsonify({'error': f'There is no post with id {post_id}.'}), 404
+
+    data = request.get_json(post_id)
+    post['title'] = data.get('title', post['title'])
+    post['content'] = data.get('content', post['content'])
+    return jsonify(post), 200
 
 
 if __name__ == '__main__':
