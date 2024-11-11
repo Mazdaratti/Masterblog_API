@@ -1,87 +1,104 @@
+"""
+Flask Application for the Masterblog API
+"""
+
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from storage.storage import Storage
+from blogmanager import BlogManager
+from backend.storage.data import PATH
 
 app = Flask(__name__)
-CORS(app)  # This will enable CORS for all routes
+CORS(app)
 
-POSTS = [
-    {"id": 1, "title": "First post", "content": "This is the first post."},
-    {"id": 2, "title": "Second post", "content": "This is the second post."},
-]
-FIELDS = {'title', 'content'}
-
-
-def get_post_by_id(post_id: int) -> dict | None:
-    """
-    Retrieves a post by its ID.
-
-    Args:
-        post_id (int): The ID of the post to retrieve.
-
-    Returns:
-        dict | None: The post data if found, otherwise None.
-    """
-    return next((post for post in POSTS if post['id'] == post_id), None)
+# Initialize storage and manager instances
+storage = Storage(PATH)
+manager = BlogManager(storage)
 
 
 @app.route('/api/posts', methods=['GET'])
 def get_posts():
-    return jsonify(POSTS)
+    """
+    Retrieve all blog posts.
 
-
-def generate_id():
-    """Generates unique post id based on highest post id in the database"""
-    return max(post['id'] for post in POSTS) + 1 if POSTS else 1
+    Returns:
+        JSON response with the list of all posts.
+    """
+    posts = manager.get_all_posts()
+    return jsonify(posts)
 
 
 @app.route('/api/posts', methods=['POST'])
 def add_post():
-    new_post = request.get_json()
+    """
+    Add a new blog post.
 
-    if new_post is None:
+    JSON Payload:
+        - title: The title of the post.
+        - content: The content of the post.
+        - author: The author of the post.
+
+    Returns:
+        JSON response with the created post data or an error message.
+    """
+    new_post = request.get_json()
+    if not new_post:
         return jsonify({"error": "Invalid JSON format"}), 400
 
-    missing_fields = [field for field in FIELDS if not new_post.get(field)]
-    if missing_fields:
-        return jsonify({"error": f"Missing fields: {', '.join(missing_fields)}"}), 400
+    error = manager.validate_data(new_post)
+    if error:
+        return jsonify(error), 400
 
-    new_post['id'] = generate_id()
-    POSTS.append(new_post)
-
-    return jsonify(new_post), 201
+    created_post = manager.add_post(new_post)
+    return jsonify(created_post), 201
 
 
 @app.route('/api/posts/<int:post_id>', methods=['DELETE'])
 def delete_post(post_id):
-    post = get_post_by_id(post_id)
+    """
+    Delete a blog post by ID.
 
-    if post is None:
-        return jsonify({'error': f'There is no post with id {post_id}.'}), 404
+    Args:
+        post_id (int): The ID of the post to delete.
 
-    POSTS.remove(post)
-
-    return jsonify({'message': f'Post with id {post_id} has been deleted successfully.'}), 200
+    Returns:
+        JSON response with a success or error message.
+    """
+    success = manager.delete_post(post_id)
+    if success:
+        return jsonify({'message': f'Post with id {post_id} has been deleted successfully.'}), 200
+    return jsonify({'error': f'There is no post with id {post_id}.'}), 404
 
 
 @app.route('/api/posts/<int:post_id>', methods=['PUT'])
 def update_post(post_id):
-    post = get_post_by_id(post_id)
+    """
+    Update a blog post by ID.
 
-    if post is None:
-        return jsonify({'error': f'There is no post with id {post_id}.'}), 404
+    Args:
+        post_id (int): The ID of the post to update.
 
-    data = request.get_json(post_id)
-    post['title'] = data.get('title', post['title'])
-    post['content'] = data.get('content', post['content'])
-    return jsonify(post), 200
+    Returns:
+        JSON response with the updated post data or an error message.
+    """
+    data = request.get_json()
+    updated_post = manager.update_post(post_id, data)
+    if updated_post:
+        return jsonify(updated_post), 200
+    return jsonify({'error': f'There is no post with id {post_id}.'}), 404
 
 
 @app.route('/api/posts/search', methods=['GET'])
 def search_posts():
-    title = request.args.get("title")
-    content = request.args.get("content")
-    if title:
-        return jsonify([post for post in POSTS if title.lower() in post["title"].lower])
+    """
+    Search for posts based on query parameters.
+
+    Returns:
+        JSON response with a list of posts that match the search criteria.
+    """
+    query = {key: value for key, value in request.args.items() if key in BlogManager.FIELDS}
+    results = manager.search_posts(query)
+    return jsonify(results)
 
 
 if __name__ == '__main__':
