@@ -189,7 +189,13 @@ class BlogManager:
             list[dict]: List of matching posts.
         """
         posts = self.storage.load_posts()
-        return [post for post in posts if self._matches_query(post, query)]
+        filtered_posts = [post for post in posts if self._matches_query(post, query)]
+        # Format dates for display after filtering
+        for post in filtered_posts:
+            post['created'] = self._format_datetime(post.get('created', ""))
+            if 'updated' in post:
+                post['updated'] = self._format_datetime(post.get('updated', ""))
+        return filtered_posts
 
     def _matches_query(self, post: dict, query: dict) -> bool:
         """
