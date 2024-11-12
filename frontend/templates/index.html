@@ -10,19 +10,57 @@
 <body>
     <div class="container">
         <h1>📚 Blog Posts</h1>
+
         <div class="input-field">
             <input type="text" id="api-base-url" placeholder="Enter API Base URL" value="http://127.0.0.1:5002/api">
             <button onclick="loadPosts()">Load Posts</button>
         </div>
+
         <div class="input-field">
             <input type="text" id="post-title" placeholder="Enter Post Title">
             <input type="text" id="post-content" placeholder="Enter Post Content">
+            <input type="text" id="post-author" placeholder="Enter Author Name">
             <button onclick="addPost()">Add Post</button>
         </div>
+
+        <div class="controls">
+            <div class="search-controls">
+                <label for="search-field">Search by:</label>
+                <select id="search-field">
+                    <option value="title">Title</option>
+                    <option value="content">Content</option>
+                    <option value="author">Author</option>
+                </select>
+                <input type="text" id="search-query" placeholder="Enter your search query">
+                <button onclick="searchPosts()">Search</button>
+            </div>
+
+            <div class="sort-controls">
+                <label for="sort-field">Sort by:</label>
+                <select id="sort-field">
+                    <option value="author">Author</option>
+                    <option value="title">Title</option>
+                    <option value="content">Content</option>
+                    <option value="created">Created Date</option>
+                    <option value="updated">Updated Date</option>
+                </select>
+                <select id="sort-order">
+                    <option value="asc">Ascending</option>
+                    <option value="desc">Descending</option>
+                </select>
+                <button onclick="sortPosts()">Sort</button>
+            </div>
+        </div>
+
+        <div id="feedback" class="feedback"></div>
         <div id="post-container">
-            <!-- Blog posts will be inserted here by JavaScript -->
+            <!-- Blog posts will be dynamically added here -->
         </div>
     </div>
+
+    <script src="static/main.js"></script>
+</body>
+</html>
 
     <script src="static/main.js"></script>
 </body>

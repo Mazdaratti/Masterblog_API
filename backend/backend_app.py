@@ -7,7 +7,7 @@ from flask_cors import CORS
 from flask_swagger_ui import get_swaggerui_blueprint
 from storage.storage import Storage
 from blogmanager import BlogManager
-from backend.storage.data import PATH
+from storage.data import PATH
 
 app = Flask(__name__)
 CORS(app)

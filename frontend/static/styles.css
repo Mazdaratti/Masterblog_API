@@ -10,6 +10,7 @@ body {
     height: 100vh;
 }
 
+/* Main container */
 .container {
     background-color: #fff;
     width: 80%;
@@ -18,7 +19,6 @@ body {
     box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.1);
     margin: auto;
 }
-
 .input-field {
     display: flex;
     align-items: center;
@@ -40,6 +40,132 @@ body {
     flex-grow: 1;
     margin-right: 10px;
 }
+
+.input-field input::placeholder {
+    color: #aaa;
+}
+
+.input-field button {
+    background-color: #4466ee;
+    color: #fff;
+    cursor: pointer;
+}
+
+.input-field button:hover {
+    background-color: #3355dd;
+}
+/* Controls container for search/sort */
+.controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: space-between;
+}
+
+.controls select,
+.controls input,
+.controls button {
+    flex: 1 1 calc(33.33% - 10px); /* Allow three items per row with space */
+    min-width: 150px;
+    padding: 8px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+/* Responsive layout for smaller screens */
+@media (max-width: 768px) {
+    .controls {
+        flex-direction: column; /* Stack controls vertically */
+    }
+    .controls select,
+    .controls input,
+    .controls button {
+        flex: 1 1 100%; /* Full width for each item */
+        min-width: 100%; /* Ensure they stretch */
+    }
+}
+
+/* Sort and search controls */
+.sort-controls, .search-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.sort-controls label, .search-controls label {
+    font-weight: bold;
+}
+
+.sort-controls select,
+.sort-controls button,
+.search-controls select,
+.search-controls input,
+.search-controls button {
+    height: 40px;
+    padding: 10px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.5s ease;
+}
+
+/* Buttons */
+button {
+    background-color: #4466ee;
+    color: #fff;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+button:hover {
+    background-color: #3355dd;
+}
+
+/* Posts styling */
+.post {
+    border-radius: 8px;
+    background-color: #f5f5f5;
+    margin-bottom: 20px;
+    padding: 20px;
+    position: relative;
+}
+
+.post h2 {
+    margin: 0;
+    color: #4466ee;
+    font-weight: 700;
+}
+
+.post p, .post .meta {
+    margin: 10px 0 0;
+    color: #333;
+}
+
+.post .meta {
+    font-size: 14px;
+    color: #777;
+}
+
+.post button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #ff4444;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.post button:hover {
+    background-color: #cc0000;
+}
+
 
 .input-field input::placeholder {
     color: #aaa;
