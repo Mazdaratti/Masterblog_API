@@ -1,0 +1,197 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Masterblog API",
+    "version": "1.0.0",
+    "description": "API documentation for the Masterblog application"
+  },
+  "host": "localhost:5002",
+  "basePath": "/",
+  "tags": [
+    {
+      "name": "Post",
+      "description": "Post API - CRUD operations"
+    }
+  ],
+  "paths": {
+    "/api/posts": {
+      "get": {
+        "summary": "Retrieve all posts",
+        "description": "Returns all blog posts with optional sorting by title, content, author, created, or updated.",
+        "produces": ["application/json"],
+        "tags": ["Post"],
+        "parameters": [
+          {
+            "name": "sort",
+            "in": "query",
+            "type": "string",
+            "description": "Field to sort by (e.g., title, content, author, created, updated)",
+            "required": false
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "type": "string",
+            "description": "Sort direction (asc or desc)",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of blog posts"
+          },
+          "400": {
+            "description": "Validation error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Add a new blog post",
+        "description": "Creates a new blog post with the provided title, content, and author.",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "tags": ["Post"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "example": "My First Blog Post"
+                },
+                "content": {
+                  "type": "string",
+                  "example": "This is the content of the blog post."
+                },
+                "author": {
+                  "type": "string",
+                  "example": "John Doe"
+                }
+              }
+            },
+            "description": "The blog post details"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Post created successfully"
+          },
+          "400": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/api/posts/{id}": {
+      "delete": {
+        "summary": "Delete a blog post",
+        "description": "Deletes a blog post by its ID.",
+        "tags": ["Post"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "integer",
+            "required": true,
+            "description": "The ID of the post to delete"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Post deleted successfully"
+          },
+          "404": {
+            "description": "Post not found"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update a blog post",
+        "description": "Updates a blog post by its ID.",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "tags": ["Post"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "integer",
+            "required": true,
+            "description": "The ID of the post to update"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "example": "Updated Blog Title"
+                },
+                "content": {
+                  "type": "string",
+                  "example": "Updated content of the blog post."
+                },
+                "author": {
+                  "type": "string",
+                  "example": "Updated Author Name"
+                }
+              }
+            },
+            "description": "The updated blog post details"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Post updated successfully"
+          },
+          "404": {
+            "description": "Post not found"
+          }
+        }
+      }
+    },
+    "/api/posts/search": {
+      "get": {
+        "summary": "Search for posts",
+        "description": "Search for posts based on title, content, or author.",
+        "produces": ["application/json"],
+        "tags": ["Post"],
+        "parameters": [
+          {
+            "name": "title",
+            "in": "query",
+            "type": "string",
+            "description": "Search posts by title",
+            "required": false
+          },
+          {
+            "name": "content",
+            "in": "query",
+            "type": "string",
+            "description": "Search posts by content",
+            "required": false
+          },
+          {
+            "name": "author",
+            "in": "query",
+            "type": "string",
+            "description": "Search posts by author",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of posts matching the search criteria"
+          }
+        }
+      }
+    }
+  }
+}
