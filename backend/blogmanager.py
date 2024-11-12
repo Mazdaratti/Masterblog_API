@@ -1,26 +1,30 @@
 """
-Blog Manager Module
+Blog Manager Module for handling blog post creation, retrieval, updating, and deletion.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from storage.storage import Storage
 
 
 class BlogManager:
     """
-    Blog Manager class to handle post management operations.
+    Blog Manager class to handle blog post management operations.
 
     Attributes:
-        FIELDS (set): Required fields for a blog post.
+        REQUIRED_FIELDS (set): Fields that are required for a blog post.
+        VALID_SORT_FIELDS (set): Fields that can be used to sort posts.
+        VALID_DIRECTIONS (set): Valid directions for sorting posts (ascending or descending).
     """
-    FIELDS = {'title', 'content', 'author'}
+    REQUIRED_FIELDS = {'title', 'content', 'author'}
+    VALID_SORT_FIELDS = {'title', 'content', 'author', 'created', 'updated'}
+    VALID_DIRECTIONS = {"asc", "desc"}
 
     def __init__(self, storage: Storage):
         """
-        Initialize the BlogManager.
+        Initialize the BlogManager with a storage instance.
 
         Args:
-            storage (Storage): An instance of Storage for handling data persistence.
+            storage (Storage): An instance of Storage to handle data persistence.
         """
         self.storage = storage
 
@@ -39,25 +43,57 @@ class BlogManager:
 
     @staticmethod
     def _format_datetime(iso_string):
-        """Format datetime string to a readable format."""
-        date = datetime.fromisoformat(iso_string)
-        return date.strftime('%B %d, %Y, %I:%M %p')
-
-    def get_all_posts(self) -> list[dict]:
         """
-        Retrieve all posts.
+        Convert an ISO datetime string to 'YYYY-MM-DD' format.
+
+        Args:
+            iso_string (str): The ISO date string.
 
         Returns:
-            list[dict]: List of all posts.
+            str: Formatted date string in 'YYYY-MM-DD' format.
         """
-        posts = self.storage.load_posts()
-        for post in posts:
-            post['created_at'] = self._format_datetime(post['created_at'])
-            if 'updated_at' in post:
-                post['updated_at'] = self._format_datetime(post['updated_at'])
-        return posts
+        date = datetime.fromisoformat(iso_string)
+        return date.strftime('%Y-%m-%d')
 
-    def get_post_by_id(self, post_id: int, posts=None) -> [dict]:
+    def get_all_posts(self, sort: str = None, direction: str = 'asc') -> dict:
+        """
+        Retrieve all posts with optional sorting and display formatting.
+
+        Args:
+            sort (str): Field to sort by. Must be in VALID_SORT_FIELDS.
+            direction (str): Sort direction, either 'asc' for ascending or 'desc' for descending.
+
+        Returns:
+            dict: A dictionary containing either:
+                  - "posts" key with a list of posts if valid parameters are provided
+                  - "error" key with a message if parameters are invalid
+        """
+        # Validate sorting parameters
+        if sort and sort not in self.VALID_SORT_FIELDS:
+            return {"error": f"Invalid sort field [{sort}]. "
+                             f"Valid options are: {', '.join(self.VALID_SORT_FIELDS)}"}
+
+        if direction not in self.VALID_DIRECTIONS:
+            return {"error": f"Invalid sort direction [{direction}]. "
+                             f"Valid options are: {', '.join(self.VALID_DIRECTIONS)}"}
+
+        # Load posts from storage
+        posts = self.storage.load_posts()
+
+        # Apply sorting if a valid field is provided
+        if sort:
+            reverse = direction == 'desc'
+            posts.sort(key=lambda post: post.get(sort, ''), reverse=reverse)
+
+        # Format dates for display after sorting
+        for post in posts:
+            post['created'] = self._format_datetime(post.get('created', ""))
+            if 'updated' in post:
+                post['updated'] = self._format_datetime(post.get('updated', ""))
+        # Return the list of posts in a dictionary for the API response
+        return {"posts": posts}
+
+    def get_post_by_id(self, post_id: int, posts=None) -> dict:
         """
         Retrieve a post by ID.
 
@@ -66,7 +102,7 @@ class BlogManager:
             posts (list, optional): List of posts to search in. Defaults to None.
 
         Returns:
-        dict or None: The post data if found, otherwise None.
+            dict or None: The post data if found, otherwise None.
         """
         posts = posts or self.storage.load_posts()
         return next((post for post in posts if post['id'] == post_id), None)
@@ -81,7 +117,7 @@ class BlogManager:
         Returns:
             dict or None: Error message if validation fails, None otherwise.
         """
-        missing_fields = [field for field in self.FIELDS if not data.get(field)]
+        missing_fields = [field for field in self.REQUIRED_FIELDS if not data.get(field)]
         if missing_fields:
             return {"error": f"Missing fields: {', '.join(missing_fields)}"}
         return None
@@ -98,7 +134,7 @@ class BlogManager:
         """
         posts = self.storage.load_posts()
         data['id'] = BlogManager._generate_id(posts)
-        data['created_at'] = datetime.utcnow().isoformat()
+        data['created'] = datetime.now(timezone.utc).isoformat()
         posts.append(data)
         self.storage.save_posts(posts)
         return data
@@ -121,7 +157,7 @@ class BlogManager:
             return True
         return False
 
-    def update_post(self, post_id: int, data: dict) -> [dict]:
+    def update_post(self, post_id: int, data: dict) -> dict:
         """
         Update an existing post by ID.
 
@@ -136,9 +172,9 @@ class BlogManager:
         post = self.get_post_by_id(post_id, posts)
         if post:
             for key, value in data.items():
-                if key in self.FIELDS:
+                if key in self.REQUIRED_FIELDS:
                     post[key] = value
-            post['updated_at'] = datetime.utcnow().isoformat()
+            post['updated'] = datetime.now(timezone.utc).isoformat()
             self.storage.save_posts(posts)
         return post
 
@@ -166,5 +202,17 @@ class BlogManager:
         Returns:
             bool: True if all criteria match, False otherwise.
         """
-        return all(str(post.get(field, '')).lower().find(str(value).lower()) != -1
-                   for field, value in query.items() if field in self.FIELDS)
+        for field, search_value in query.items():
+            if field not in self.REQUIRED_FIELDS:
+                continue
+
+            # Get post field value and search criteria,
+            # both in lowercase for case-insensitive comparison
+            post_value = str(post.get(field, '')).lower()
+            search_value = str(search_value).lower()
+
+            # If search value is not in post value, the post does not match the query
+            if search_value not in post_value:
+                return False
+
+        return True
