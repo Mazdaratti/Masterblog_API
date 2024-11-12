@@ -48,4 +48,4 @@ class Storage:
             with open(self.path, "w", encoding="utf-8") as file:
                 json.dump(posts, file, ensure_ascii=False, indent=4)
         except IOError as e:
-            print(f"Error: Unable to write to the file '{self.path}.")
+            print(f"Error: Unable to write to the file '{self.path}: {e}")
